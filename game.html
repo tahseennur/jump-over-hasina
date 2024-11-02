@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Runner Game</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 600px;
+      height: 200px;
+      border: 2px solid #333;
+      position: relative;
+      overflow: hidden;
+      background-color: #fff;
+    }
+
+    .runner {
+      width: 40px;
+      height: 60px;
+      position: absolute;
+      bottom: 20px;
+      left: 30px;
+      background: url('C:/Users/ASUS/Desktop/fbbf/game/images/boy-fotor-bg-remover-20241102214414.png') no-repeat center center / contain;
+      transition: bottom 0.2s;
+    }
+
+    .obstacle {
+      width: 60px; /* Increased width */
+      height: 90px; /* Increased height */
+      background: url('C:/Users/ASUS/Desktop/fbbf/game/images/1-fotor-bg-remover-20241102214323.png') no-repeat center center / contain;
+      position: absolute;
+      bottom: 20px;
+      right: 0;
+      animation: obstacleMove 2s linear infinite;
+    }
+
+    .girl {
+      width: 40px;
+      height: 60px;
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: url('C:/Users/ASUS/Desktop/fbbf/game/images/grl-fotor-bg-remover-20241102214831.png') no-repeat center center / contain;
+      display: none;
+    }
+
+    @keyframes obstacleMove {
+      from {
+        right: -60px;
+      }
+      to {
+        right: 600px;
+      }
+    }
+
+    .message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5em;
+      color: green;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="runner" id="runner"></div>
+    <div class="obstacle" id="obstacle"></div>
+    <div class="girl" id="girl"></div>
+    <div class="message" id="message">You've reached her!</div>
+  </div>
+
+  <script>
+    const runner = document.getElementById("runner");
+    const obstacle = document.getElementById("obstacle");
+    const girl = document.getElementById("girl");
+    const message = document.getElementById("message");
+    let isJumping = false;
+    let gameEnded = false;
+    let jumpCount = 0;
+    const requiredJumps = 10;
+    let safeToLand = false;
+    let lastObstaclePosition = window.innerWidth;
+
+    // Jump function
+    document.addEventListener("keydown", (event) => {
+      if (event.code === "Space" && !isJumping && !gameEnded) {
+        isJumping = true;
+        safeToLand = false; // Start jump; not safe to land yet
+        runner.style.bottom = "100px"; // Jump height
+        setTimeout(() => {
+          runner.style.bottom = "20px"; // Back to ground level
+          setTimeout(() => { safeToLand = true; }, 100); // Safe to land after 100ms
+          isJumping = false;
+        }, 300);
+      }
+    });
+
+    // Collision detection and jump count
+    function checkCollision() {
+      const runnerRect = runner.getBoundingClientRect();
+      const obstacleRect = obstacle.getBoundingClientRect();
+
+      // Only check collision if the runner is not jumping and it's safe to land
+      if (
+        !isJumping &&
+        safeToLand &&
+        runnerRect.left < obstacleRect.right &&
+        runnerRect.right > obstacleRect.left &&
+        runnerRect.bottom > obstacleRect.top &&
+        !gameEnded
+      ) {
+        alert("Game Over! You hit an obstacle.");
+        window.location.reload();
+      } else if (obstacleRect.right < runnerRect.left && safeToLand && obstacleRect.right < lastObstaclePosition) {
+        // Only increment jump count when the obstacle has fully passed the runner and hasn't been counted already
+        jumpCount++;
+        lastObstaclePosition = obstacleRect.right; // Update lastObstaclePosition to avoid multiple counts for the same obstacle
+        console.log(`Jumps: ${jumpCount}`);
+        if (jumpCount >= requiredJumps) {
+          endGame();
+        }
+      }
+    }
+
+    // End the game after required jumps
+    function endGame() {
+      gameEnded = true;
+      obstacle.style.animationPlayState = "paused";
+      girl.style.display = "block";
+      message.style.display = "block";
+    }
+
+    // Collision check every 10ms
+    setInterval(checkCollision, 10);
+  </script>
+</body>
+</html>
